@@ -1,0 +1,8 @@
+.env
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.travel_packing/
+.streamlit-app.pid
+.streamlit-app.*.log
