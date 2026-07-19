@@ -53,7 +53,7 @@ Copy-Item .env.example .env
 .\run.ps1 "这周五去上海，待3天，参加行业展会，晚上有同行聚餐。"
 ```
 
-若系统 PATH 中没有 Python，`run.ps1` 会尝试使用 Codex 自带的 Python 运行时。
+若系统 PATH 中没有 Python，`run.ps1` 会尝试使用 Codex 自带的 Python 运行。
 
 需要跨程序重启保存状态时：
 
