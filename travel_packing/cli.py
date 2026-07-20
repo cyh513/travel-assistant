@@ -10,6 +10,7 @@ from langgraph.types import Command
 
 from .graph import build_graph
 from .render import render_console
+from .services import DeepSeekConfigurationError, require_deepseek_api_key
 from .state import initial_state
 
 
@@ -41,6 +42,10 @@ def _run_until_ready(graph, value, config):
 
 def main() -> None:
     load_dotenv()
+    try:
+        require_deepseek_api_key()
+    except DeepSeekConfigurationError as exc:
+        raise SystemExit(f"[错误] {exc}") from exc
     parser = argparse.ArgumentParser(description="LangGraph 智能旅行打包助手")
     parser.add_argument("trip", nargs="?", help="初始行程描述")
     parser.add_argument("--thread-id", default=str(uuid4()), help="持久化会话 ID")

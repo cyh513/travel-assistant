@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 from langgraph.types import Command
 
 from travel_packing.graph import build_graph
+from travel_packing.services import DeepSeekConfigurationError, require_deepseek_api_key
 from travel_packing.state import CATEGORIES, TravelState, initial_state
 
 
@@ -18,6 +19,13 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
 )
+
+try:
+    require_deepseek_api_key()
+except DeepSeekConfigurationError as exc:
+    st.error(str(exc))
+    st.code("Copy-Item .env.example .env\n# 然后在 .env 中填写 DEEPSEEK_API_KEY")
+    st.stop()
 
 CATEGORY_META = {
     "clothing": ("👔", "衣物"),
@@ -311,4 +319,3 @@ else:
         render_changes_and_issues(state)
         st.divider()
         render_update_form()
-

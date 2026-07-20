@@ -4,12 +4,14 @@ from langgraph.types import Command
 import pytest
 
 from travel_packing.graph import build_graph
-from travel_packing.services import get_mock_weather
+from travel_packing.services import DeepSeekConfigurationError, DeepSeekRequestError, get_mock_weather
 from travel_packing.state import initial_state
 
 
 @pytest.fixture(autouse=True)
 def deterministic_weather(monkeypatch):
+    monkeypatch.setenv("DEEPSEEK_API_KEY", "test-key")
+    monkeypatch.setattr("travel_packing.services.parse_with_deepseek", lambda text, today: {})
     monkeypatch.setattr("travel_packing.nodes.get_weather", get_mock_weather)
 
 
@@ -19,6 +21,25 @@ def _names(state):
         for items in state["packing_list"].values()
         for item in items
     }
+
+
+def test_graph_refuses_to_start_without_deepseek_key(monkeypatch):
+    monkeypatch.delenv("DEEPSEEK_API_KEY", raising=False)
+    with pytest.raises(DeepSeekConfigurationError, match="DEEPSEEK_API_KEY"):
+        build_graph()
+
+
+def test_llm_failure_does_not_fall_back_to_local_parser(monkeypatch):
+    def fail_request(text, today):
+        raise DeepSeekRequestError("DeepSeek 调用失败")
+
+    monkeypatch.setattr("travel_packing.services.parse_with_deepseek", fail_request)
+    graph = build_graph()
+    with pytest.raises(DeepSeekRequestError, match="DeepSeek 调用失败"):
+        graph.invoke(
+            initial_state("这周五去上海，待3天，参加行业展会。"),
+            config={"configurable": {"thread_id": "llm-failure"}},
+        )
 
 
 def test_initial_trip_and_incremental_update():

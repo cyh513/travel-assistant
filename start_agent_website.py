@@ -20,6 +20,10 @@ import time
 import webbrowser
 from pathlib import Path
 
+from dotenv import load_dotenv
+
+from travel_packing.services import DeepSeekConfigurationError, require_deepseek_api_key
+
 HOST = "localhost"
 PORT = 8501
 APP_FILE = Path(__file__).resolve().parent / "app.py"
@@ -87,6 +91,13 @@ def _open_browser_later(delay: float = 1.5) -> None:
 
 
 def main() -> int:
+    load_dotenv(Path(__file__).resolve().parent / ".env")
+    try:
+        require_deepseek_api_key()
+    except DeepSeekConfigurationError as exc:
+        print(f"[错误] {exc}")
+        return 1
+
     if not APP_FILE.exists():
         print(f"[错误] 找不到应用文件：{APP_FILE}")
         return 1

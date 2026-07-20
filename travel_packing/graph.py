@@ -13,6 +13,7 @@ from .nodes import (
     train_node,
     weather_node,
 )
+from .services import require_deepseek_api_key
 from .state import TravelState
 
 
@@ -57,6 +58,7 @@ def _route_after_checker(state: TravelState) -> Literal["generator", "revisor", 
 
 
 def build_graph(checkpointer=None):
+    require_deepseek_api_key()
     builder = StateGraph(TravelState)
     builder.add_node("parser", parser_node)
     builder.add_node("train", train_node)

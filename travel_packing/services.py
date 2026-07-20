@@ -34,6 +34,24 @@ CITY_NAMES = (
     "纽约",
 )
 
+
+class DeepSeekConfigurationError(RuntimeError):
+    """Raised when the required DeepSeek credentials are unavailable."""
+
+
+class DeepSeekRequestError(RuntimeError):
+    """Raised when DeepSeek cannot successfully parse a trip request."""
+
+
+def require_deepseek_api_key() -> str:
+    api_key = os.getenv("DEEPSEEK_API_KEY", "").strip()
+    if not api_key:
+        raise DeepSeekConfigurationError(
+            "未配置 DEEPSEEK_API_KEY，智能体无法启动。请复制 .env.example 为 .env，"
+            "填入你自己的 DeepSeek API Key 后重新运行。"
+        )
+    return api_key
+
 ACTIVITY_KEYWORDS = {
     "商务会议": ("会议", "客户", "商务", "见客户"),
     "行业展会": ("展会", "展览"),
@@ -191,9 +209,7 @@ def _extract_origin(text: str, destination: str | None) -> str | None:
 
 
 def parse_with_deepseek(text: str, today: date) -> dict[str, Any] | None:
-    api_key = os.getenv("DEEPSEEK_API_KEY")
-    if not api_key:
-        return None
+    api_key = require_deepseek_api_key()
     try:
         from langchain_openai import ChatOpenAI
 
@@ -216,9 +232,16 @@ travelers_count, companions, activities, special_events, constraints。origin �
 """.strip()
         response = model.invoke(prompt)
         content = response.content if isinstance(response.content, str) else str(response.content)
-        return _extract_json(content)
-    except Exception:
-        return None
+        parsed = _extract_json(content)
+        if parsed is None:
+            raise DeepSeekRequestError("DeepSeek 返回了无法解析的内容，请稍后重试。")
+        return parsed
+    except DeepSeekRequestError:
+        raise
+    except Exception as exc:
+        raise DeepSeekRequestError(
+            "DeepSeek 调用失败，请检查 API Key、账户余额和网络连接后重试。"
+        ) from exc
 
 
 def parse_trip_info(text: str, today: date | None = None, use_llm: bool = True) -> dict[str, Any]:

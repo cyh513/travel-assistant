@@ -33,7 +33,7 @@ Checker -> END（无问题或达到重试上限）
 Revisor -> Checker（增量更新）
 ```
 
-- `Parser`：DeepSeek 可选增强；未配置或调用失败时自动使用本地规则解析。
+- `Parser`：必须通过 DeepSeek 解析主行程；未配置 Key 或调用失败时立即停止，不再静默降级为本地规则。
 - `Weather`：通过 Open-Meteo 查询真实天气，无需 API Key；查询失败时走人工天气 fallback。
 - `Generator`：按衣物、电子设备、洗护、证件/文件和其他分类生成。
 - `Checker`：检查御寒、正式搭配、袜子数量、充电器等问题。
@@ -63,7 +63,7 @@ python -m pip install langgraph-checkpoint-sqlite
 .\run.ps1 --sqlite .travel_packing\checkpoints.sqlite --thread-id user-001 --update "第二天要演讲，需要正装和电脑。"
 ```
 
-`DEEPSEEK_API_KEY` 是可选项。不要把真实密钥写进源码；`.env` 已加入 `.gitignore`。天气使用免费的 Open-Meteo，不需要天气 API Key，也不需要 Tavily。
+`DEEPSEEK_API_KEY` 是必填项。未配置 Key 时程序拒绝启动；Key 无效、余额不足或 DeepSeek 请求失败时，本次智能体运行会报错并停止，不会退回本地规则。不要把真实密钥写进源码；`.env` 已加入 `.gitignore`。天气使用免费的 Open-Meteo，不需要天气 API Key，也不需要 Tavily。
 
 运行测试：
 
